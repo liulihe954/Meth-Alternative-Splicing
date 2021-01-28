@@ -66,17 +66,17 @@ load('/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Enrichment_DIE_D
 library(EnrichKit)
 # input format
 
-#all_gene_iso_expr
-#sig_gene_iso_expr
+length(all_gene_iso_expr)
+length(sig_gene_iso_expr)
 
-#all_gene_deu
-#sig_gene_deu
+length(all_gene_deu)
+length(sig_gene_deu)
 
 ## DIE
 # convert and orgnize
 GeneInfo_DIE = convertNformatID(GeneSetNames=c("DIE"),
                             SigGene_list = list(sig_gene_iso_expr),
-                            TotalGene_list = list(sig_gene_iso_expr),
+                            TotalGene_list = list(all_gene_iso_expr),
                             IDtype = "ens") # Need to choose from c('ens','entrez','symbol')
 
 # Resulting an integreted gene identifier object
@@ -128,7 +128,7 @@ HyperGEnrich(GeneSet = GeneInfo_DIE,
 
 ## DEU
 # convert and orgnize
-GeneInfo_DEU = convertNformatID(GeneSetNames=c("DIE"),
+GeneInfo_DEU = convertNformatID(GeneSetNames=c("DEU"),
                                 SigGene_list = list(sig_gene_deu),
                                 TotalGene_list = list(all_gene_deu),
                                 IDtype = "ens") # Need to choose from c('ens','entrez','symbol')
@@ -180,30 +180,38 @@ HyperGEnrich(GeneSet = GeneInfo_DEU,
              NewDB = F)
 
 # out put
-DEU_out_list = list.files("/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Enrichment_DIE_DEU/DEU")
+path_DEU = "/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Enrichment_DIE_DEU/DEU"
+DEU_out_list = list.files(path_DEU)
 require(openxlsx)
-list_of_datasets =list()
+list_of_datasets_DEU =list()
+#rm(results)
 for (i in seq_along(DEU_out_list)){
+  rm(results)
   name_tmp = strsplit(DEU_out_list[i],"-")[[1]][1]
   print(name_tmp)
-  load(DEU_out_list[i])
-  list_of_datasets[name_tmp] = results
-  rm(results)
+  load(paste0(path_DEU,'/',DEU_out_list[i]))
+  #length(results[[1]])
+  list_of_datasets_DEU[name_tmp] = results
+  #
 }
-write.xlsx(list_of_datasets, file = "/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Enrichment_DIE_DEU/DEU/Enrich_DEU.xlsx")
+write.xlsx(list_of_datasets_DEU, file = "/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Enrichment_DIE_DEU/Enrich_DEU.xlsx")
+
 
 #
-DIE_out_list = list.files("/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Enrichment_DIE_DEU/DIE")
+path_DIE = "/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Enrichment_DIE_DEU/DIE"
+DIE_out_list = list.files(path_DIE)
 require(openxlsx)
-list_of_datasets =list()
+list_of_datasets_DIE =list()
+#rm(results)
 for (i in seq_along(DIE_out_list)){
+  rm(results)
   name_tmp = strsplit(DIE_out_list[i],"-")[[1]][1]
   print(name_tmp)
-  load(DIE_out_list[i])
-  list_of_datasets[name_tmp] = results
-  rm(results)
+  load(paste0(path_DIE,'/',DIE_out_list[i]))
+  list_of_datasets_DIE[name_tmp] = results
+  #rm(results)
 }
-write.xlsx(list_of_datasets, file = "/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Enrichment_DIE_DEU/DIE/Enrich_DIE.xlsx")
+write.xlsx(list_of_datasets_DIE, file = "/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Enrichment_DIE_DEU/Enrich_DIE.xlsx")
 
 
 
