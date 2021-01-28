@@ -289,17 +289,14 @@ for (n in c(1:100)){
 
 summary(all_ks_pval)
 
-getwd()
 save(all_ks_pval,file = 'all_ks_pval.rda')
-
-getwd
 
 load('all_ks_pval.rda')
 
+
 png('ks_statistics.png')
 x <- all_ks_pval
-h<-hist(x, breaks=10, col="red", xlab='P-value',
-        main="KS statistics")
+h<-hist(x, breaks=10, col="red", xlab='P-value',main="KS statistics")
 xfit<-seq(min(x),max(x),length=40)
 yfit<-dnorm(xfit,mean=mean(x),sd=sd(x))
 yfit <- yfit*diff(h$mids[1:2])*length(x)
