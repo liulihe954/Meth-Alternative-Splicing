@@ -138,10 +138,6 @@ for (i in seq_along(gene_list_uniq)){
 }
 
 ###
-boxplot(exon_prop_sig_overall,
-        exon_prop_nonsig_overall,
-        names = c('sig exon - pval 0.01','non sig exon - pval 0.01'))
-
 data <- data.frame(
   value=c(exon_prop_sig_overall,
           exon_prop_nonsig_overall),
@@ -151,10 +147,9 @@ data <- data.frame(
 p1 =
   ggplot(data, aes(y=name, x=value, fill=name)) +
   geom_violin()+theme(legend.position="bottom")+
-  coord_flip()
-png("Fig1-exons.png")
+  coord_flip() 
+  
 p1
-dev.off()
 
 ks.test(exon_prop_sig_ave,
         exon_prop_nonsig_ave)
@@ -170,15 +165,11 @@ p2 =
   ggplot(data2, aes(y=name, x=value, fill=name)) +
   geom_violin()+theme(legend.position="bottom")+
   coord_flip()
-png("Fig2-introns.png")
-p2
-dev.off()
-
-length(intron_prop_surrd_overall)
-length(intron_prop_other_overall)
 
 
 ks.test(intron_prop_surrd_overall,
         intron_prop_other_overall)
+
+
 
 

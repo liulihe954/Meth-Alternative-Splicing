@@ -1,4 +1,7 @@
-### prepare package and index 
+## Differential Exon Usage
+
+
+# prepare package and index 
 suppressPackageStartupMessages(library("DEXSeq"))
 library(tidyverse);library(readxl)
 sample_index =read_excel("/blue/mateescu/lihe.liu/Methylation_WGCNA/Samples_RNA-Seq.xlsx")
@@ -118,8 +121,8 @@ dxd_DEU_DEXSeq_results = DEXSeqResults(dxd_DEU_DEXSeq_final)
 
 #save(dxd,dxr1,file = 'DEXSeq_out.rda') #save(dxd,dxr1,file = 'DEXSeq_out2.rda')
 save(dxd_DEU_DEXSeq, dxd_DEU_DEXSeq_final,dxd_DEU_DEXSeq_results,file = 'DEXSeq_out_all.rda')
-# head(dxr1,100)
-#view(dxd_DEU_DEXSeq_results[which(dxd_DEU_DEXSeq_results$groupID == 'ENSBTAG00000000362'),])
+
+## PLOT1 - DEU  - Volcano
 
 
 

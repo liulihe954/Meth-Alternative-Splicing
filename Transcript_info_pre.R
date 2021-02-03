@@ -17,6 +17,18 @@ names(gtf_df)
 
 # get iso expr info
 load('/blue/mateescu/lihe.liu/AltSplicing/rsem/iso_expr/DESeqRes1217.RData')
+
+# gtf_df_reduce = gtf_df %>% 
+#   dplyr::select(gene_id, transcript_id)
+# 
+# DIE_map_gene = DESeqres %>% 
+#   as.data.frame() %>% 
+#   mutate(TranscriptID = rownames(.)) %>% 
+#   dplyr::left_join(gtf_df_reduce, by = c('TranscriptID' = 'transcript_id')) %>% 
+#   relocate(TranscriptID,.before = baseMean) %>% 
+#   relocate(gene_id,.before = TranscriptID)
+# save(DIE_map_gene,file = 'DIE_map_gene.rda')
+
 sig_transcript = DESeqres %>% 
   as.data.frame() %>% 
   mutate(TranscriptID = rownames(.)) %>% 
