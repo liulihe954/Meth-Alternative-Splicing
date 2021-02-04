@@ -152,12 +152,15 @@ match_color = data.frame(count = c(0:7),
 df_DEU_Voc_plt_color = df_DEU_Voc_plt %>% 
   dplyr::left_join(match_color,by = c('count_sig_exon'='count')) %>% 
   #mutate(plot_label = ifelse(pvalue <= 0.009,external_gene_name,NA)) %>% 
-  mutate(plot_label = ifelse(pvalue <=0.00009 | (pvalue <=0.009 & abs(log2fold_Meth_Control)>=4), external_gene_name, NA)) %>% 
-  mutate(plot_color = ifelse(pvalue<=0.009,color,col2hex('grey'))) %>% 
+  mutate(plot_label = ifelse(pvalue<=0.0001,
+                             ifelse(external_gene_name == "",groupID,external_gene_name)
+                             ,'test')) %>% 
+  mutate(plot_color = ifelse(pvalue<=0.01,color,col2hex('grey'))) %>% 
   mutate(plot_color = factor(plot_color,levels = choose_color))
 #
-
+names(df_DEU_Voc_plt)
 library(ggrepel)
+number_ticks <- function(n) {function(limits) pretty(limits, n)}
 Voc_DEU = 
 ggplot(data = df_DEU_Voc_plt_color,
        aes(x = log2fold_Meth_Control,
@@ -165,26 +168,29 @@ ggplot(data = df_DEU_Voc_plt_color,
            #color= plot_color,
            label = plot_label)
        ) + 
-  geom_point(size = 0.8,aes(color = plot_color)) + 
+  geom_point(size = 2,aes(color = plot_color)) + 
   #scale_color_identity(guide = "legend")+
   scale_color_manual(labels = c(0:7),
                      values = choose_color,
                      guide = T)+
+  xlim(-30.1,30)+
+  labs(y="-log10 (PValue)", x = "log2 (Fold Change)")+
+  #scale_x_continuous(breaks = number_ticks(10))+
   #scale_fill_manual(values = c('grey','blue','brown','orange','pink','wheat','tan','red'))+
-  geom_text_repel(size = 2,#fontface = 'bold',
+  geom_text_repel(size =3.5,#fontface = 'bold',
                   min.segment.length = unit(0, 'lines'),
-                  segment.alpha = 0.6,
-                  box.padding = .5, max.overlaps = Inf) +
-  theme(legend.position = "top",
-        legend.title = element_text( size=10,face="bold"),
-        legend.text = element_text(face = "bold"),
-        axis.title.x = element_text(size=10, face="bold"),
-        axis.title.y = element_text(size=10, face="bold"),
-        axis.title.x = element_text(size=10, face="bold"),
-        axis.title.y = element_text(size=10, face="bold"))+
+                  segment.alpha = 0.7,
+                  box.padding = 1, max.overlaps = Inf) +
+  theme(legend.position = "bottom",
+        legend.title = element_text(size=14,face="bold"),
+        legend.text = element_text(size=12,face = "bold"),
+        legend.key=element_blank(),
+        axis.title.x = element_text(size=16, face="bold"),
+        axis.title.y = element_text(size=16, face="bold"))+
   guides(color = guide_legend("Number of Significant Exons",nrow = 1))
+Voc_DEU
 
-tiff("Plots/Fig-Voc_DEU.tiff", width = 14, height = 14, units = 'in', res = 500)
+tiff("Plots/Fig1b-Voc_DEU.tiff", width = 14, height = 14, units = 'in', res = 500)
 print(Voc_DEU)
 dev.off()
 
@@ -283,12 +289,13 @@ df_DIE_Voc_plt = DIE_map_gene %>%
   dplyr::select(c(1,2,4,7)) %>% 
   dplyr::left_join(gene, by = c('gene_id' = 'ensembl_gene_id')) %>% 
   relocate(external_gene_name,.after = gene_id) %>% 
-  mutate(plot_color = ifelse(pvalue<=0.009,col2hex('red'),col2hex('grey'))) %>% 
+  mutate(plot_color = ifelse(pvalue<=0.01,col2hex('red'),col2hex('grey'))) %>% 
   mutate(plot_color = factor(plot_color,levels = c(col2hex('red'),col2hex('grey')))) %>% 
-  mutate(plot_label = ifelse(pvalue <= 0.009, ifelse(external_gene_name == "",gene_id,external_gene_name),NA))
+  mutate(plot_label = ifelse((pvalue <= 10^-2.5 | (pvalue <= 0.01 & abs(log2FoldChange)>= 0.8 )), ifelse(external_gene_name == "",gene_id,external_gene_name),NA))
   #mutate(plot_label2 = ifelse((pvalue <= 0.009 & is.na(plot_label)),gene_id,plot_label)) %>% 
 
 head(df_DIE_Voc_plt)
+
 
 #(df_DIE_Voc_plt[df_DIE_Voc_plt$log2FoldChange == max(df_DIE_Voc_plt$log2FoldChange),7])
 
@@ -299,21 +306,22 @@ Voc_DIE =
              y = -log10(pvalue),
              #color= plot_color,
              label = plot_label)) + 
-  geom_point(size = 0.8,aes(color = plot_color)) + 
+  geom_point(size = 2,aes(color = plot_color)) + 
+  xlim(-5.6, 5.6) +
   scale_color_manual(values = c(col2hex('red'),col2hex('grey')),
                      guide = F)+
   theme(legend.position = "none")+
-  geom_text_repel(size = 2,#fontface = 'bold',
+  labs(y="-log10 (PValue)", x = "log2 (Fold Change)")+
+  geom_text_repel(size = 3.5,#fontface = 'bold',
                   min.segment.length = unit(0, 'lines'),
                   segment.alpha = 0.5,
-                  box.padding = .2, max.overlaps = Inf)+
-  theme(axis.title.x = element_text(size=10, face="bold"),
-        axis.title.y = element_text(size=10, face="bold"),
-        axis.title.x = element_text(size=10, face="bold"),
-        axis.title.y = element_text(size=10, face="bold"))
-Voc_DIE
+                  box.padding =  .8, max.overlaps = 20)+
+  theme(axis.title.x = element_text(size=16, face="bold"),
+        axis.title.y = element_text(size=16, face="bold"))
 
-tiff("Plots/Fig-Voc_DIE.tiff", width = 14, height = 14, units = 'in', res = 500)
+#Voc_DIE
+
+tiff("Plots/Fig1a-Voc_DIE.tiff", width = 14, height = 14, units = 'in', res = 500)
 print(Voc_DIE)
 dev.off()
 
@@ -332,15 +340,7 @@ data = data.frame(
           exon_prop_nonsig_overall),
   name =c(rep('Significant',length(exon_prop_sig_overall)),
           rep('Non-significant',length(exon_prop_nonsig_overall))),
-  type =c(rep('Exon',length(c(exon_prop_sig_overall,exon_prop_nonsig_overall)))))
-
-
-p1 =
-  ggplot(data, aes(y=name, x=value, fill=name)) +
-  geom_violin()+theme(legend.position="bottom")+
-  coord_flip() 
-
-p1
+  type =c(rep('Exons',length(c(exon_prop_sig_overall,exon_prop_nonsig_overall)))))
 
 ks.test(exon_prop_sig_ave,
         exon_prop_nonsig_ave)
@@ -349,17 +349,9 @@ ks.test(exon_prop_sig_ave,
 data2 <- data.frame(
   value=c(intron_prop_surrd_overall,
           intron_prop_other_overall),
-  name =c(rep('Contiguous/Adjacent',length(intron_prop_surrd_overall)),
-          rep('Other',length(intron_prop_other_overall))),
-  type =c(rep('Intron',length(c(intron_prop_surrd_overall,intron_prop_other_overall)))))
-
-
-
-
-p2 = 
-  ggplot(data2, aes(y=name, x=value, fill=name)) +
-  geom_violin()+theme(legend.position="bottom")+
-  coord_flip()
+  name =c(rep('Contiguous',length(intron_prop_surrd_overall)),
+          rep('Non-contiguous',length(intron_prop_other_overall))),
+  type =c(rep('Introns',length(c(intron_prop_surrd_overall,intron_prop_other_overall)))))
 
 
 ks.test(intron_prop_surrd_overall,
@@ -368,14 +360,14 @@ ks.test(intron_prop_surrd_overall,
 
 df_meth_prop = data %>% 
   bind_rows(data2) %>% 
-  mutate(Significance = ifelse(name %in% c('Significant','Contiguous/Adjacent'),'DU','Non-DU')) %>% 
+  mutate(Significance = ifelse(name %in% c('Significant','Contiguous'),'DU','Non-DU')) %>% 
   mutate_at('Significance',as.factor) %>% 
   mutate_at('name',as.factor) %>% 
   mutate_at('type',as.factor) %>% 
   dplyr::filter(value<= 0.6)
 
 df_meth_prop$name = factor(df_meth_prop$name,
-                           levels = c('Significant','Non-significant','Contiguous/Adjacent','Other'))
+                           levels = c('Significant','Non-significant','Contiguous','Non-contiguous'))
 
 Violin_Prop = 
   ggplot(df_meth_prop,
@@ -386,18 +378,26 @@ Violin_Prop =
   xlab('')+
   guides(fill=guide_legend(title=""))+
   scale_fill_manual(values = c(col2hex('red'),col2hex('blue')))+
-  theme(legend.position='bottom',
+  theme(legend.position='none',
         legend.text=element_text(size=10),
-        axis.title.x = element_text(size=10, face="bold"),
-        axis.title.y = element_text(size=10, face="bold"),
-        strip.text.x = element_text(size = 10,face = "bold"),
+        axis.title.x = element_text(size=14, face="bold"),
+        axis.title.y = element_text(size=14, face="bold"),
+        strip.text.x = element_text(size = 12,face = "bold"),
         strip.background = element_rect(color="black",linetype="solid"),
         legend.key.size = unit(.8,"line"),
-        axis.text.x= element_text(color = 'black',face="bold", size = 10))
-      
-tiff("Plots/Fig-Violin-Prop.tiff", width = 12, height = 6, units = 'in', res = 500)
+        axis.text.x= element_text(color = 'black',face="bold", size = 12),
+        axis.text.y= element_text(color = 'black',face="bold", size = 8))
+Violin_Prop
+
+tiff("Plots/Fig4-Violin-Prop.tiff", width = 12, height = 8, units = 'in', res = 500)
 print(Violin_Prop)
 dev.off()
+
+#######################################
+################ Enrichment ###########
+######################################
+
+
 
 
 
