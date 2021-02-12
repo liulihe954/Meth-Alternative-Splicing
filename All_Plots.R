@@ -396,11 +396,92 @@ dev.off()
 #######################################
 ################ Enrichment ###########
 ######################################
+library(openxlsx)
+library(tidyverse)
+plot_DEU = read.xlsx('./Enrichment_DIE_DEU/Enrichment_Summary_2plot_DEU.xlsx', sheet = 1) %>% 
+  dplyr::filter(Include == 1) %>% 
+  mutate(Tag = paste0(ID,'[',totalG,']')) %>% 
+  relocate(Tag, .after = ID) %>% 
+  mutate(Group = 'DEU')
+
+plot_DIE = read.xlsx('./Enrichment_DIE_DEU/Enrichment_Summary_2plot_DIE.xlsx', sheet = 1) %>% 
+  dplyr::filter(Include == 1) %>% 
+  mutate(Tag = paste0(ID,'[',totalG,']')) %>% 
+  relocate(Tag, .after = ID) %>% 
+  mutate(Group = 'DIE')
+names(plot_DIE)
+
+plot_all = plot_DEU %>% 
+  bind_rows(plot_DIE) %>% 
+  mutate(Category = as.factor(Category)) %>% 
+  mutate(log10pvalue = -log10(pvalue)) %>% 
+  mutate(hitsPerc = - hitsPerc) %>% 
+  group_by(Category)
+
+View(plot_all[,c(2,9)])
 
 
+plot_all$Tag =
+  factor(plot_all$Tag,
+         levels = rev(c(
+           "GO:0005524[920]","GO:0016887[129]",#atp
+           "GO:0030155[21]","GO:0045785[28]","GO:0051693[11]","bta04810[148]","IPR001589[18]",#Adherens junctions and Actin Cytoskeleton
+           "GO:0030955[7]","GO:0036376[6]","M25065[8]",#Ion Binding and Transportation
+           "R-BTA-8957322[25]","GO:0033539[6]","GO:0033211[5]",#Muscle Metabolism
+           "M5909[192]","M18391[38]","GO:0003009[17]", #Muscle Function and Development
+           "bta04512[57]","M27218[41]", #ECM-receptor Interaction
+           "D019175[33]", #DNA METH
+           "M8084[50]",# RNA SPLICING
+           "GO:0046034[22]","GO:0042623[14]","M784[22]", #ATP
+           "GO:0008270[538]","IPR036875[20]",#Ion Binding and Transportation
+           "M26014[15]","M13561[17]","M15075[103]", #Postsynaptic Membrane
+           "M2044[117]","D017398[1409]","M16965[19]",#RNA Splicing
+           "GO:0030177[26]","bta04520[68]","GO:0032956[58]"#Adherens junctions and Actin Cytoskeleton
+         )))
 
 
+plot_all$Category =
+  factor(plot_all$Category,
+         levels = (c(
+           "ATP",#atp
+           "Adherens junctions and Actin Cytoskeleton",#
+           "Ion Binding and Transportation",#
+           "Muscle Metabolism Function and Development",#
+           "ECM-receptor Interaction", #
+           "DNA Methylation", #
+           "RNA Splicing",# 
+           #"Muscle Function and Development", #
+           "Postsynaptic Membrane"
+         )))
 
+
+ggEnrich = 
+  ggplot(plot_all) + coord_flip()+
+  geom_bar(mapping = aes(x = Tag, y = hitsPerc,fill = Category),#
+           stat = "identity", width = 0.2) +
+  geom_point(mapping = aes(x = Tag, y = 10 * log10pvalue),size = 1) +
+  #scale_y_continuous() 
+  scale_y_continuous(name = expression(bold("Percentage of Significant Genes")),
+                     sec.axis = sec_axis(~. * 0.1, breaks = c(0,5,10), 
+                                         name = expression(bold("-log10(P-value)")))
+                     ,limits = c(0,100), breaks = seq(0,100,by=5)
+                     ,expand = c(0,1)) +
+  guides(fill=guide_legend(title="",
+                           keywidth = 1, nrow = 2, 
+                           keyheight = 1))+
+  theme(legend.position = "bottom",
+        legend.text=element_text(size=10,face="bold",color = "black"),
+        axis.title.y = element_blank(),
+        axis.text.y = element_text(size=8,face="bold",color = "black"),
+        axis.text.x = element_text(size=10,face="bold",color = "black")) +
+  #facet_wrap( ~ Group, nrow = 2 ,scales = "free",)
+  facet_grid(Group~.,scales = "free_y",switch = 'y')
+
+
+tiff("Plots/Fig2-Enrichment.tiff", width = 16, height = 8, units = 'in', res = 500)
+#tiff("Fig3-Enrichment-Bar.tiff", width = 10, height = 6, units = 'in', res = 500)
+print(ggEnrich)
+dev.off()
 
 
 
