@@ -38,6 +38,8 @@ sig_gene_iso_expr = gtf_df %>%
   pull(gene_id) %>% unique()
 length(sig_gene_iso_expr)
 
+library('DEXseq')
+
 
 
 #### DEU
@@ -65,6 +67,13 @@ save(all_gene_iso_expr,sig_gene_iso_expr,all_gene_deu,sig_gene_deu,
 load('/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Enrichment_DIE_DEU/Enrich_Gene_List.rda')
 library(EnrichKit)
 # input format
+load('sig_c_p01_hited.rda')
+
+length(gene_hited)
+
+table(sig_gene_deu %in% gene_hited)
+
+table(sig_gene_iso_expr %in% all_gene_deu)
 
 length(all_gene_iso_expr)
 length(sig_gene_iso_expr)
@@ -197,6 +206,41 @@ for (i in seq_along(DEU_out_list)){
 write.xlsx(list_of_datasets_DEU, file = "/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Enrichment_DIE_DEU/Enrich_DEU.xlsx")
 
 
+# ### concat all terms toghether
+# library(tidyverse)
+# #DB_Names = names(list_of_datasets_DEU)
+# DB_Names = c('Go','Interpro','KEGG','MeSH','Msig','Reactome')
+# Enrich_DEU_All = data.frame()
+# for (i in seq_along(DB_Names)){
+#   tmp = data.frame(list_of_datasets_DEU[i]) %>% 
+#     dplyr::select(c(1:4,8,9)) %>% 
+#     `colnames<-`(c("Term", "totalG", "sigG",'pvalue','hitsPerc','adj.pvalue')) %>% 
+#     rowwise() %>% 
+#     mutate(ID = unlist(strsplit(Term,'---'))[1]) %>% 
+#     mutate(Name = unlist(strsplit(Term,'---'))[2]) %>% 
+#     dplyr::select(-c(1)) %>% 
+#     rename(Total_Genes = totalG) %>% 
+#     rename(Significant_Genes = sigG) %>% 
+#     rename(Pvalue = pvalue) %>% 
+#     rename(Overlap_Percentage = hitsPerc) %>% 
+#     relocate(Name,.bofore = Total_Genes) %>% 
+#     relocate(ID,.bofore = Name) %>% 
+#     dplyr::select(-c(7)) %>% 
+#     mutate(Database = DB_Names[i]) %>% 
+#     group_by(Database) %>% 
+#     arrange(Pvalue) %>% 
+#     mutate(Overlap_Percentage = -Overlap_Percentage)
+#   
+#   Enrich_DEU_All = Enrich_DEU_All %>% 
+#     bind_rows(tmp)
+# }
+# dim(Enrich_DEU_All)
+# library(openxlsx)
+# write.xlsx(Enrich_DEU_All,row.names = F,
+#            file = '/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Manuscript/Supplementary_Files/Enrichment_DEU.xlsx')
+
+
+
 #
 path_DIE = "/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Enrichment_DIE_DEU/DIE"
 DIE_out_list = list.files(path_DIE)
@@ -212,6 +256,38 @@ for (i in seq_along(DIE_out_list)){
   #rm(results)
 }
 write.xlsx(list_of_datasets_DIE, file = "/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Enrichment_DIE_DEU/Enrich_DIE.xlsx")
-
-
-
+# 
+# ### concat all terms toghether
+# library(tidyverse)
+# #DB_Names = names(list_of_datasets_DIE)
+# DB_Names = c('Go','Interpro','KEGG','MeSH','Msig','Reactome')
+# Enrich_DIE_All = data.frame()
+# for (i in seq_along(DB_Names)){
+#   tmp = data.frame(list_of_datasets_DIE[i]) %>% 
+#     dplyr::select(c(1:4,8,9)) %>% 
+#     `colnames<-`(c("Term", "totalG", "sigG",'pvalue','hitsPerc','adj.pvalue')) %>% 
+#     rowwise() %>% 
+#     mutate(ID = unlist(strsplit(Term,'---'))[1]) %>% 
+#     mutate(Name = unlist(strsplit(Term,'---'))[2]) %>% 
+#     dplyr::select(-c(1)) %>% 
+#     rename(Total_Genes = totalG) %>% 
+#     rename(Significant_Genes = sigG) %>% 
+#     rename(Pvalue = pvalue) %>% 
+#     rename(Overlap_Percentage = hitsPerc) %>% 
+#     relocate(Name,.bofore = Total_Genes) %>% 
+#     relocate(ID,.bofore = Name) %>% 
+#     dplyr::select(-c(7)) %>% 
+#     mutate(Database = DB_Names[i]) %>% 
+#     group_by(Database) %>% 
+#     arrange(Pvalue) %>% 
+#     mutate(Overlap_Percentage = -Overlap_Percentage)
+#   
+#   Enrich_DIE_All = Enrich_DIE_All %>% 
+#     bind_rows(tmp)
+# }
+# dim(Enrich_DIE_All)
+# library(openxlsx)
+# write.xlsx(Enrich_DIE_All,row.names = F,
+#            file = '/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Manuscript/Supplementary_Files/Enrichment_DIE.xlsx')
+# 
+# 

@@ -5,12 +5,17 @@ setwd('/blue/mateescu/lihe.liu/AltSplicing/AltSplicing-R/meth_prop')
 suppressPackageStartupMessages(library(rtracklayer))
 suppressPackageStartupMessages(library(tidyverse))
 gtf_path = '/blue/mateescu/lihe.liu/AltSplicing/ARS-UCD1.2/annotation/Bos_taurus.ARS-UCD1.2.101.clean.v1.gtf'
-gtf = rtracklayer::import(gtf_path)
-gtf_df = as.data.frame(gtf) %>% as_tibble() %>% 
-  dplyr::select(c(1,2,3,10,12,14,19))
 
-data.frame(head(gtf_df))
-names(gtf_df)
+gtf = rtracklayer::import(gtf_path)
+
+gtf_df = as.data.frame(gtf) %>% as_tibble() %>% dplyr::select(c(1,2,3,10,12,14,19))
+
+data.frame(head(gtf_df,20))
+
+# gtf_2_test = '/blue/mateescu/lihe.liu/AltSplicing/ARS-UCD1.2/annotation/flattened.clean.dexseq.gtf'
+# gtf_2_test = rtracklayer::import(gtf_2_test)
+# gtf_2_test_df = as.data.frame(gtf_2_test) %>% as_tibble() %>% 
+#   dplyr::filter(type != 'aggregate_gene')
 
 #data.frame(head(gtf_df,10))
 #save(gtf_df,file = 'bta_gtf_df.rda')
@@ -29,13 +34,15 @@ load('/blue/mateescu/lihe.liu/AltSplicing/rsem/iso_expr/DESeqRes1217.RData')
 #   relocate(gene_id,.before = TranscriptID)
 # save(DIE_map_gene,file = 'DIE_map_gene.rda')
 
+
 sig_transcript = DESeqres %>% 
   as.data.frame() %>% 
   mutate(TranscriptID = rownames(.)) %>% 
   dplyr::filter(pvalue <= 0.009) %>% 
   relocate(TranscriptID,.before = baseMean) %>% 
   pull(TranscriptID)
-#head(DESeqres)
+head(DESeqres)
+length(sig_transcript)
 
 # extract all gene id input in DIE
 all_transcripts = unique(rownames(DESeqres))
@@ -45,7 +52,9 @@ all_gene_iso_expr = gtf_df %>%
   distinct(gene_id,seqnames) %>% 
   relocate(gene_id,.before = seqnames) %>% 
   arrange(gene_id)
+
 dim(all_gene_iso_expr)
+head(all_gene_iso_expr)
 #write.table(sig_gene_iso_expr,"GeneChr_Index_iso_expr.csv", col.names = F,row.names = F, quote = F)
 
 # extract gene id by transcript id 
@@ -55,30 +64,43 @@ sig_gene_iso_expr = gtf_df %>%
   relocate(gene_id,.before = seqnames) %>% 
   arrange(gene_id) 
 dim(sig_gene_iso_expr)
+
+
 #write.table(sig_gene_iso_expr,"GeneChr_Index_iso_expr.csv", col.names = F,row.names = F, quote = F)
-
-
 
 
 # extract gene id by transcript id - full
 target_gene_index = sig_gene_iso_expr %>% pull(gene_id)
+all_gene_index = all_gene_iso_expr %>% pull(gene_id)
+# #head(target_gene_index)
+# save(target_gene_index,all_gene_index,file = 'DIE_selected_genes.rda')
+
 sig_gene_iso_expr_full = gtf_df %>% 
   dplyr::filter(gene_id %in% target_gene_index) %>% 
-  group_by(gene_id) %>% 
-  mutate(count_isoform = length(unique(transcript_id)))
+  group_by(gene_id) #%>% mutate(count_isoform = length(unique(transcript_id)))
 
-length(unique(sig_gene_iso_expr_full$transcript_id)) # matched 175
+dim(sig_gene_iso_expr_full)
+data.frame(head(sig_gene_iso_expr_full))
+
+#length(unique(sig_gene_iso_expr_full$transcript_id)) # matched 175
 length(unique(sig_gene_iso_expr_full$gene_id)) # matched 175
 
-# check if gene has multiple transcripts
-checkiso = sig_gene_iso_expr_full %>% 
-  group_by(gene_id) %>% 
-  slice(1)
-table(checkiso$count_isoform)
+all_gene_iso_expr_full = gtf_df %>% 
+  dplyr::filter(gene_id %in% all_gene_index) %>% 
+  group_by(gene_id) 
+#%>% mutate(count_isoform = length(unique(transcript_id)))
+dim(all_gene_iso_expr_full)
 
-selected_transcript_full = sig_gene_iso_expr_full %>% 
-  dplyr::filter(count_isoform != 1)
-dim(selected_transcript_full)
+data.frame(head(all_gene_iso_expr_full))
+# # check if gene has multiple transcripts
+# checkiso = sig_gene_iso_expr_full %>% 
+#   group_by(gene_id) %>% 
+#   slice(1)
+# table(checkiso$count_isoform)
+# 
+# selected_transcript_full = sig_gene_iso_expr_full %>% 
+#   dplyr::filter(count_isoform != 1)
+# dim(selected_transcript_full)
 
 ###
 load('/blue/mateescu/lihe.liu/AltSplicing/AltSplicing-R/meth_prop/out/Diff_C_all.rda')
@@ -86,10 +108,104 @@ load('/blue/mateescu/lihe.liu/AltSplicing/AltSplicing-R/meth_prop/out/DEXSeq_fin
 
 # thresholds
 pvalue.thres = 0.01
-count_all = numeric(nrow(selected_transcript_full))
-count_sig = numeric(nrow(selected_transcript_full))
+#count_all = numeric(nrow(all_gene_iso_expr_full))
+#count_sig = numeric(nrow(all_gene_iso_expr_full))
 
-chr_tmp = as.character(unlist(selected_transcript_full[1,1]))
+# for supplementary files - output
+
+library(tidyverse)
+#names(all_gene_iso_expr_full)
+#table(all_gene_iso_expr_full$seqnames)
+chr_idx = c(paste0('chr',seq(1:29)),'chrX')
+
+######                                ######
+###### create sup material DIE&Meth  ######
+######                                ######
+# 
+# out = data.frame()
+# for (i in seq_along(chr_idx)){
+#   #i = 3
+#   chr_tmp = chr_idx[i]
+#   print(paste0('checking ',chr_idx[i]))
+#   # all Cs to check
+#   Diff_C_all_subset = Diff_C_all %>%
+#     dplyr::filter(chr == chr_tmp)
+#   
+#   # Sig Cs to check: pvalue <= 0.01
+#   Diff_C_all_subset_sig = Diff_C_all %>%
+#     dplyr::filter(chr == chr_tmp ,
+#                   pvalue <= pvalue.thres) 
+#   #
+#   out_tmp = all_gene_iso_expr_full %>%
+#     data.frame() %>%
+#     dplyr::filter(seqnames == chr_tmp) # %>% arrange(start)
+# 
+#   count_all_tmp = numeric(nrow(out_tmp))
+#   count_sig_tmp = numeric(nrow(out_tmp))
+#   
+#   count_all_prom = numeric(nrow(out_tmp))
+#   count_sig_prom = numeric(nrow(out_tmp))
+#   
+#   #summary(out_tmp$start)
+#   #sum(Diff_C_all_subset %in% c(310346:120848565))
+#   #c(310346,120848565) # all exons
+#   
+#   for (j in seq_len(nrow(out_tmp))){
+#     if(j %% 100 == 0){print(j)}
+#     #j = 3
+#     start_tmp = unlist(out_tmp[j,2],use.names = F)
+#     end_tmp = unlist(out_tmp[j,3],use.names = F)
+#     
+#     count_all_tmp[j] = sum(Diff_C_all_subset$start %in% c(start_tmp:end_tmp))
+#     count_sig_tmp[j] = sum(Diff_C_all_subset_sig$start %in% c(start_tmp:end_tmp))
+#     
+#     count_all_prom[j] = sum(Diff_C_all_subset$start %in% c((start_tmp - 3000):start_tmp))
+#     count_sig_prom[j] = sum(Diff_C_all_subset_sig$start %in% c((start_tmp - 3000):start_tmp))
+#     
+#   }
+#   print(summary(count_sig_tmp))
+#   out_tmp['count_all'] = count_all_tmp
+#   out_tmp['count_sig'] = count_sig_tmp
+#   
+#   out_tmp['count_all_prom_x'] = count_all_prom
+#   out_tmp['count_sig_prom_x'] = count_sig_prom
+#   
+#   out = rbind(out,out_tmp)
+# }
+# 
+# out_tmp = out %>% 
+#   group_by(gene_id) %>% 
+#   arrange(start) %>% 
+#   mutate(count_all_prom = count_all_prom_x[1]) %>% 
+#   mutate(count_sig_prom = count_sig_prom_x[1])
+# 
+# sum(out_tmp$count_all_prom)
+# sum(out_tmp$count_sig_prom)
+# 
+# 
+# pval_container = DESeqres %>%
+#   data.frame() %>%
+#   mutate(transcript_id = rownames(.)) %>%
+#   dplyr::select(transcript_id,pvalue)
+# 
+# out_format = out_tmp %>%
+#   relocate(transcript_id,.before = seqnames) %>%
+#   relocate(gene_id,.before = seqnames) %>%
+#   relocate(exon_number,.before = seqnames) %>%
+#   dplyr::select(-exon_id) %>%
+#   group_by(transcript_id) %>%
+#   arrange(transcript_id) %>%
+#   left_join(pval_container, by = c('transcript_id'='transcript_id')) %>%
+#   relocate(pvalue,.before = gene_id)
+# 
+# data.frame(head(out_format,10))
+# 
+# save(out_format,file = 'iso_with_count_in_exon.rda')
+
+
+########################################################################################################################
+
+
 # all Cs to check
 Diff_C_all_subset = Diff_C_all %>% 
   dplyr::filter(chr == chr_tmp) %>% 
@@ -114,7 +230,6 @@ for (i in seq_len(nrow(selected_transcript_full))){
                     pvalue <= pvalue.thres) %>% 
       arrange(start)
   }
-  
   
   # count
   start = as.numeric(unlist(selected_transcript_full[i,2]))
@@ -206,8 +321,6 @@ for (i in seq_along(gene_list_multi_transcript)){
 
 ks.test(proportions_sig_transcript,
         proportions_other_transcript)
-
-
 
 
 ##### compare promoters
@@ -314,5 +427,4 @@ yfit<-dnorm(xfit,mean=mean(x),sd=sd(x))
 yfit <- yfit*diff(h$mids[1:2])*length(x)
 lines(xfit, yfit, col="blue", lwd=2)
 dev.off()
-
 

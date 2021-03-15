@@ -148,6 +148,24 @@ library(gplots)
 choose_color = col2hex(c('grey','blue','brown','orange','pink','wheat','tan','red'))
 match_color = data.frame(count = c(0:7),
                          color = choose_color)
+
+
+# df_DEU_Sup_file = df_DEU_Voc_plt %>% 
+#   dplyr::filter(pvalue<= 0.009) %>% 
+#   rename(GeneID = groupID) %>% 
+#   rename(Gene_Name = external_gene_name) %>% 
+#   rename(Exon_number = featureID) %>% 
+#   dplyr::select(-count_sig_exon) %>% 
+#   relocate(log2fold_Meth_Control,.before = pvalue) %>% 
+#   group_by(GeneID) %>% 
+#   arrange(pvalue)
+# library(openxlsx)
+# write.xlsx(df_DEU_Sup_file,row.names = F,
+#            file = '/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Manuscript/Supplementary_Files/DEU_Sig.xlsx')
+# 
+#   
+
+
 #
 df_DEU_Voc_plt_color = df_DEU_Voc_plt %>% 
   dplyr::left_join(match_color,by = c('count_sig_exon'='count')) %>% 
@@ -296,8 +314,21 @@ df_DIE_Voc_plt = DIE_map_gene %>%
 
 head(df_DIE_Voc_plt)
 
-
-#(df_DIE_Voc_plt[df_DIE_Voc_plt$log2FoldChange == max(df_DIE_Voc_plt$log2FoldChange),7])
+# df_DIE_Sup_file = DIE_map_gene %>%
+#   distinct(TranscriptID,.keep_all = T) %>%
+#   #dplyr::select(c(1,2,4,7)) %>%
+#   dplyr::left_join(gene, by = c('gene_id' = 'ensembl_gene_id')) %>%
+#   relocate(external_gene_name,.after = gene_id) %>%
+#   relocate(TranscriptID,.before = gene_id) %>%
+#   rename(GeneID=gene_id) %>%
+#   rename(Gene_Name=external_gene_name) %>%
+#   dplyr::filter(pvalue <= 0.009)
+# 
+# dim(df_DIE_Sup_file)
+# library(openxlsx)
+# write.xlsx(df_DIE_Sup_file,row.names = F,
+#            file = '/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Manuscript/Supplementary_Files/Differential_Isoform_Expresion_Sig_out.xlsx')
+# 
 
 library(ggrepel)
 Voc_DIE = 
@@ -398,27 +429,27 @@ dev.off()
 ######################################
 library(openxlsx)
 library(tidyverse)
-plot_DEU = read.xlsx('./Enrichment_DIE_DEU/Enrichment_Summary_2plot_DEU.xlsx', sheet = 1) %>% 
+plot_DEU = read.xlsx('/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Enrichment_DIE_DEU/Enrichment_Summary_2plot_DEU.xlsx', sheet = 1) %>% 
   dplyr::filter(Include == 1) %>% 
   mutate(Tag = paste0(ID,'[',totalG,']')) %>% 
   relocate(Tag, .after = ID) %>% 
   mutate(Group = 'DEU')
 
-plot_DIE = read.xlsx('./Enrichment_DIE_DEU/Enrichment_Summary_2plot_DIE.xlsx', sheet = 1) %>% 
+plot_DIE = read.xlsx('/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Enrichment_DIE_DEU/Enrichment_Summary_2plot_DIE.xlsx', sheet = 1) %>% 
   dplyr::filter(Include == 1) %>% 
   mutate(Tag = paste0(ID,'[',totalG,']')) %>% 
   relocate(Tag, .after = ID) %>% 
   mutate(Group = 'DIE')
 names(plot_DIE)
 
-plot_all = plot_DEU %>% 
-  bind_rows(plot_DIE) %>% 
+plot_all = plot_DIE %>% 
+  bind_rows(plot_DEU) %>% 
   mutate(Category = as.factor(Category)) %>% 
   mutate(log10pvalue = -log10(pvalue)) %>% 
   mutate(hitsPerc = - hitsPerc) %>% 
   group_by(Category)
 
-View(plot_all[,c(2,9)])
+#View(plot_all[,c(2,9)])
 
 
 plot_all$Tag =
@@ -454,18 +485,22 @@ plot_all$Category =
            "Postsynaptic Membrane"
          )))
 
-
+plot_all$Group =
+  factor(plot_all$Group,
+         levels = (c(
+           'DIE',
+           'DEU'
+         )))
 ggEnrich = 
   ggplot(plot_all) + coord_flip()+
-  geom_bar(mapping = aes(x = Tag, y = hitsPerc,fill = Category),#
+  geom_bar(mapping = aes(x = Tag, y = -hitsPerc,fill = Category),#
            stat = "identity", width = 0.2) +
   geom_point(mapping = aes(x = Tag, y = 10 * log10pvalue),size = 1) +
-  #scale_y_continuous() 
   scale_y_continuous(name = expression(bold("Percentage of Significant Genes")),
                      sec.axis = sec_axis(~. * 0.1, breaks = c(0,5,10), 
-                                         name = expression(bold("-log10(P-value)")))
-                     ,limits = c(0,100), breaks = seq(0,100,by=5)
-                     ,expand = c(0,1)) +
+                                         name = expression(bold("-log10(P-value)"))),
+                     limits = c(0,100), breaks = seq(0,100,by=5),
+                     expand = c(0,1)) +
   guides(fill=guide_legend(title="",
                            keywidth = 1, nrow = 2, 
                            keyheight = 1))+
@@ -475,14 +510,12 @@ ggEnrich =
         axis.text.y = element_text(size=8,face="bold",color = "black"),
         axis.text.x = element_text(size=10,face="bold",color = "black")) +
   #facet_wrap( ~ Group, nrow = 2 ,scales = "free",)
-  facet_grid(Group~.,scales = "free_y",switch = 'y')
+  facet_grid(Group ~ .,scales = "free_y",switch = 'y')
 
 
-tiff("Plots/Fig2-Enrichment.tiff", width = 16, height = 8, units = 'in', res = 500)
-#tiff("Fig3-Enrichment-Bar.tiff", width = 10, height = 6, units = 'in', res = 500)
-print(ggEnrich)
+tiff("/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Manuscript/Fig23-Enrichment.tiff",
+     width = 16, height = 8, units = 'in', res = 500)
+ggEnrich
 dev.off()
-
-
 
 

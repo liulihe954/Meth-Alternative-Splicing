@@ -1,6 +1,5 @@
 ## Differential Exon Usage
 
-
 # prepare package and index 
 suppressPackageStartupMessages(library("DEXSeq"))
 library(tidyverse);library(readxl)
@@ -39,16 +38,16 @@ dxd_raw = DEXSeqDataSetFromHTSeq(
 )
 
 ### filter-out low expr gene
+head(all_gene)
 all_gene = read.csv(countfiles[1],header = F,sep = '\t') %>%
   dplyr::rename(Exon = V1, Count = V2) %>% 
   mutate(Exon = sub("\\:(.*)", "", Exon)) %>% 
   group_by(Exon) %>% 
   mutate(SampleSum = sum(Count)) %>% 
   slice_head() %>% 
-  dplyr::select(-Count) %>% 
-  mutate(Keep = ifelse(SampleSum >= 1, 1, 0)) %>% 
+  #dplyr::select(-Count) %>% 
+  #mutate(Keep = ifelse(SampleSum >= 1, 1, 0)) %>% 
   dplyr::select(-SampleSum) 
-
 
 #tmp = c()
 for (i in c(2: length(basename(countfiles)))){
@@ -58,8 +57,8 @@ for (i in c(2: length(basename(countfiles)))){
     group_by(Exon) %>% 
     mutate(SampleSum = sum(Count)) %>% 
     slice_head() %>% 
-    dplyr::select(-Count) %>% 
-    mutate(Keep = ifelse(SampleSum >= 1, 1, 0)) %>% 
+    #dplyr::select(-Count) %>% 
+    #mutate(Keep = ifelse(SampleSum >= 1, 1, 0)) %>% 
     dplyr::select(-SampleSum) 
   #tmp[i] = all_gene_tmp[6,2]
   all_gene = all_gene_tmp %>% 
@@ -67,16 +66,24 @@ for (i in c(2: length(basename(countfiles)))){
 }
 #unlist(tmp,use.names = F)
 #cm[1,]
-head(all_gene)
+
 # rm ambiguous / empty 
 all_gene_out = all_gene[-c(1:5),]
 head(all_gene_out)
+dim(all_gene_out)
+
+all_gene_out = all_gene_out %>% 
+  as_tibble() %>% 
+  rowwise() %>% 
+  mutate(rowsum = sum(get(colnames(all_gene_out)[2:20])))
+table(all_gene_out$keep == 0)
 
 # keep genes expressed in > 9 replicates
 gene2keep = 
   all_gene_out[(which(rowSums(all_gene_out[,2:ncol(all_gene_out)])>9)),1] %>% 
   unlist(use.names = F)
 length(gene2keep) # 12056: previously
+
 #save(gene2keep,file = 'gene2keep.rda')
 # keep only genes with high expr
 dxd_filter = dxd_raw[geneIDs(dxd_raw) %in% gene2keep,]
@@ -151,15 +158,63 @@ head(integrate_by_gene_out)
 sum(integrate_by_gene_out$count_all) # 1311047
 sum(integrate_by_gene_out$count_sig_p.01) # 51796
 
+####################################################################################
+############                local: Gather information                   ############
+####################################################################################
 # local: download output with three columns of propotions
 load(
-  'DEXSeq_final.rda'
+  '/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/DEXSeq_out_all.rda'
 )
 load(
-  'integrate_by_gene_withCproportion.rda'
+  '/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/integrate_by_gene_withCproportion_pval0.01.rda'
 )
+
+#rm(integrate_by_gene_out)
+#load('/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/integrate_by_gene_withCproportion.rda')
+
 length(unique(integrate_by_gene_out$groupID)) # 12056 genes expressed
 names(integrate_by_gene_out)
+head(integrate_by_gene_out)
+dim(integrate_by_gene_out)
+
+integrate_by_gene_out_new = integrate_by_gene_out
+integrate_by_gene_out_new_section = integrate_by_gene_out_new[,c(7:10)]
+
+head(integrate_by_gene_out_new)
+dim(integrate_by_gene_out_new)
+
+# get pvalues from previous 
+load('/Users/liulihe95/Desktop/Isoform-Expression/Iso_Expression/DIE_DEU_Universal_Info.rda')
+view(head(Universal_exon_intron_transcript_final))
+#Universal_exon_intron_transcript_final_test = Universal_exon_intron_transcript_final[1:30,]
+Universal_exon_intron_transcript_final_new = Universal_exon_intron_transcript_final %>% 
+  mutate(pvalue = ifelse(pvalue == 1,NA,pvalue)) %>% 
+  dplyr::select(c(1:7))
+
+Universal_DEU_info_sup_file = cbind(Universal_exon_intron_transcript_final_new,integrate_by_gene_out_new_section)
+
+names(Universal_DEU_info_sup_file)
+
+sum(Universal_DEU_info_sup_file$count_sig_p.01)
+# load('../AltSplicing-R/DIE_selected_genes.rda')
+# DIE_genes = all_gene_index
+# DEU_genes = unique(Universal_DEU_info_sup_file$groupID)
+# Overlap: F:940 T:11116 
+head(DIE_genes[DIE_genes %in% DEU_genes])
+
+sum(Universal_DEU_info_sup_file$count_sig_prom)
+
+# Universal_DEU_info_sup_file_test = Universal_DEU_info_sup_file %>% 
+#   mutate(EI_indic = substr(featureID,1,1)) %>% 
+#   dplyr::filter(EI_indic == 'E')
+# sum(Universal_DEU_info_sup_file_test$count_all)
+# sum(Universal_DEU_info_sup_file_test$count_sig_p.01)
+
+library(openxlsx)
+write.xlsx(Universal_DEU_info_sup_file,row.names = F,
+           file = '/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Manuscript/Supplementary_Files/Universal_DEU_info.xlsx')
+
+
 
 #### map summary
 
@@ -171,8 +226,8 @@ test_miss_chr
 #  all_gene_out[(which(rowSums(all_gene_out[,2:ncol(all_gene_out)])>9)),1] 
 
 
-load('/blue/mateescu/lihe.liu/AltSplicing/AltSplicing-R/meth_prop/out/DEXSeq_final.rda')
 
+load('/blue/mateescu/lihe.liu/AltSplicing/AltSplicing-R/meth_prop/out/DEXSeq_final.rda')
 load('/blue/mateescu/lihe.liu/AltSplicing/AltSplicing-R/meth_prop/out/2b_assemble/assembled/integrate_by_gene_withCproportion.rda')
 ###
 library(tidyverse)
@@ -191,7 +246,7 @@ aggrate_by_gene_to_join = aggrate_by_gene %>%
 ############  Merge1: add pvalue indicator columns (done seprately)       ###########
 ####################################################################################
 load(
-  'aggrate_by_gene_withp.rda'
+  '/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/aggrate_by_gene_withp.rda'
 )
 head(DEXSeq_final_add_intr_out_final)
 

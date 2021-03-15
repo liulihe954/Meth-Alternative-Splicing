@@ -1,10 +1,10 @@
 library(tidyverse)
 # local plotting relationship
 load(
-  'DEXSeq_final.rda'
+  '/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/DEXSeq_out_all.rda'
 )
 load(
-  'integrate_by_gene_withCproportion_pval0.01.rda'
+  '/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/integrate_by_gene_withCproportion_pval0.01.rda'
 )
 dim(integrate_by_gene_out)
 
@@ -13,7 +13,7 @@ Universal_exon_intron_transcript_final_new =
         integrate_by_gene_out[,c(4:10)]) %>% 
   as_tibble() %>% 
   mutate(prop_p.01 = count_sig_p.01/count_all)
-head(Universal_exon_intron_transcript_final_new)
+view(head(Universal_exon_intron_transcript_final_new))
 
 #
 pthres = 9e-03
@@ -72,6 +72,9 @@ intron_prop_other_overall = c()
 intron_prop_other_ave = c()
 
 gene_list_uniq = unique(gene_list)
+gene_list_uniq = gene_list_uniq[sig_gene_deu %in% gene_hited]
+library(tidyverse)
+length(gene_list_uniq)
 ###
 for (i in seq_along(gene_list_uniq)){
   #i = 63
@@ -165,11 +168,9 @@ p2 =
   ggplot(data2, aes(y=name, x=value, fill=name)) +
   geom_violin()+theme(legend.position="bottom")+
   coord_flip()
-
-
+p2
+length(intron_prop_surrd_overall)
 ks.test(intron_prop_surrd_overall,
         intron_prop_other_overall)
-
-
 
 

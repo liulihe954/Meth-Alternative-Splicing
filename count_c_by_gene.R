@@ -35,6 +35,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 # print(args[1])
 # print(args[2])
+
 suppressPackageStartupMessages(library("tidyverse"))
 
 setwd('/blue/mateescu/lihe.liu/AltSplicing/AltSplicing-R/meth_prop/out')
@@ -179,7 +180,9 @@ if (nrow(DEXSeq_final_add_intr) <= 1){
     # count_sig.15[i] = tmp_count_all.15
     # count_sig.1[i] = tmp_count_all.1
   }
-  "/" <- function(x,y) ifelse(y==0,0,base:::"/"(x,y))
+  
+  #"/" <- function(x,y) ifelse(y==0,0,base:::"/"(x,y))
+  
   DEXSeq_final_add_intr_out_final = DEXSeq_final_add_intr_out %>% 
     mutate(count_all = count_all, # count all in sections
            count_sig_p.01 = count_sig_p.01, # count sig in sections
