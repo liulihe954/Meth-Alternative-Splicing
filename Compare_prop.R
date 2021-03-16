@@ -71,17 +71,22 @@ intron_prop_surrd_ave = c()
 intron_prop_other_overall = c()
 intron_prop_other_ave = c()
 
-gene_list_uniq = unique(gene_list)
-gene_list_uniq = gene_list_uniq[sig_gene_deu %in% gene_hited]
+#gene_list_uniq = unique(gene_list)
+#gene_list_uniq = gene_list_uniq[sig_gene_deu %in% gene_hited]
+
+gene_list_uniq = gene_list_DEU[gene_list_DEU %in% Gene_include_DEU]
+
 library(tidyverse)
 length(gene_list_uniq)
+names(Universal_exon_intron_transcript_final_new)
 ###
 for (i in seq_along(gene_list_uniq)){
-  #i = 63
-  tmp_file = Universal_exon_intron_transcript_final_new %>% 
-    dplyr::filter(groupID == gene_list_uniq[i]) %>% 
-    drop_na(pvalue)
+
+  tmp_file = Universal_DEU_info_sup_file %>% 
+    dplyr::filter(groupID == gene_list_uniq[i])
+  #%>% drop_na(pvalue)
   print(i)
+  
   # differentiate intro and extron + rm na
   raw_index = c(1:nrow(tmp_file))
   Intro_dex = raw_index[str_detect(tmp_file$featureID,'I')]
@@ -92,7 +97,7 @@ for (i in seq_along(gene_list_uniq)){
   # pull out temp columns
   col_total = tmp_file %>% pull(count_all)
   col_sig = tmp_file %>% pull(count_sig_p.01)
-  col_prop = tmp_file %>% pull(prop_p.01)
+  col_prop = tmp_file %>% pull(count_sig_p.01)
 
   # EXONs
   # put threshold

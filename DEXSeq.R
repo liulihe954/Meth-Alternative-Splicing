@@ -192,7 +192,6 @@ Universal_exon_intron_transcript_final_new = Universal_exon_intron_transcript_fi
   dplyr::select(c(1:7))
 
 Universal_DEU_info_sup_file = cbind(Universal_exon_intron_transcript_final_new,integrate_by_gene_out_new_section)
-
 names(Universal_DEU_info_sup_file)
 
 sum(Universal_DEU_info_sup_file$count_sig_p.01)

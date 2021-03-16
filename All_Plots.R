@@ -360,6 +360,7 @@ dev.off()
 #######################################
 ################ Proportion ###########
 #####################################
+
 # diff Meth Cs proportions are lower in Sig differentially used exons;
 # Same trendin introns surrounding a differentially used exon
 
@@ -399,7 +400,7 @@ df_meth_prop = data %>%
 
 df_meth_prop$name = factor(df_meth_prop$name,
                            levels = c('Significant','Non-significant','Contiguous','Non-contiguous'))
-
+library(gplots)
 Violin_Prop = 
   ggplot(df_meth_prop,
        aes(y=value, x=name, fill=Significance)) +
@@ -419,9 +420,10 @@ Violin_Prop =
         axis.text.x= element_text(color = 'black',face="bold", size = 12),
         axis.text.y= element_text(color = 'black',face="bold", size = 8))
 Violin_Prop
+dev.off()
 
-tiff("Plots/Fig4-Violin-Prop.tiff", width = 12, height = 8, units = 'in', res = 500)
-print(Violin_Prop)
+tiff("/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Manuscript/Figures/Fig4-Violin-Prop.tiff", width = 12, height = 8, units = 'in', res = 500)
+Violin_Prop
 dev.off()
 
 #######################################
