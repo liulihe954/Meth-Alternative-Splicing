@@ -192,7 +192,7 @@ ggplot(data = df_DEU_Voc_plt_color,
                      values = choose_color,
                      guide = T)+
   xlim(-30.1,30)+
-  labs(y="-log10 (PValue)", x = "log2 (Fold Change)")+
+  labs(y="-log10 (P-value)", x = "log2 (Fold Change)")+
   #scale_x_continuous(breaks = number_ticks(10))+
   #scale_fill_manual(values = c('grey','blue','brown','orange','pink','wheat','tan','red'))+
   geom_text_repel(size =3.5,#fontface = 'bold',
@@ -208,7 +208,7 @@ ggplot(data = df_DEU_Voc_plt_color,
   guides(color = guide_legend("Number of Significant Exons",nrow = 1))
 Voc_DEU
 
-tiff("Plots/Fig1b-Voc_DEU.tiff", width = 14, height = 14, units = 'in', res = 500)
+tiff("/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Manuscript/Figures/Fig1b-Voc_DEU.tiff", width = 14, height = 14, units = 'in', res = 500)
 print(Voc_DEU)
 dev.off()
 
@@ -342,7 +342,7 @@ Voc_DIE =
   scale_color_manual(values = c(col2hex('red'),col2hex('grey')),
                      guide = F)+
   theme(legend.position = "none")+
-  labs(y="-log10 (PValue)", x = "log2 (Fold Change)")+
+  labs(y="-log10 (P-value)", x = "log2 (Fold Change)")+
   geom_text_repel(size = 3.5,#fontface = 'bold',
                   min.segment.length = unit(0, 'lines'),
                   segment.alpha = 0.5,
@@ -352,7 +352,7 @@ Voc_DIE =
 
 #Voc_DIE
 
-tiff("Plots/Fig1a-Voc_DIE.tiff", width = 14, height = 14, units = 'in', res = 500)
+tiff("/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Manuscript/Figures/Fig1a-Voc_DIE.tiff", width = 14, height = 14, units = 'in', res = 500)
 print(Voc_DIE)
 dev.off()
 
@@ -447,7 +447,7 @@ names(plot_DIE)
 plot_all = plot_DIE %>% 
   bind_rows(plot_DEU) %>% 
   mutate(Category = as.factor(Category)) %>% 
-  mutate(log10pvalue = -log10(pvalue)) %>% 
+  mutate(log10pvalue = -log10(pvalue)*0.5) %>% 
   mutate(hitsPerc = - hitsPerc) %>% 
   group_by(Category)
 
@@ -499,9 +499,9 @@ ggEnrich =
            stat = "identity", width = 0.2) +
   geom_point(mapping = aes(x = Tag, y = 10 * log10pvalue),size = 1) +
   scale_y_continuous(name = expression(bold("Percentage of Significant Genes")),
-                     sec.axis = sec_axis(~. * 0.1, breaks = c(0,5,10), 
+                     sec.axis = sec_axis(~. * 0.2, breaks = c(0,5,10,15), 
                                          name = expression(bold("-log10(P-value)"))),
-                     limits = c(0,100), breaks = seq(0,100,by=5),
+                     limits = c(0,65), breaks = seq(0,65,by=5),
                      expand = c(0,1)) +
   guides(fill=guide_legend(title="",
                            keywidth = 1, nrow = 2, 
@@ -513,9 +513,9 @@ ggEnrich =
         axis.text.x = element_text(size=10,face="bold",color = "black")) +
   #facet_wrap( ~ Group, nrow = 2 ,scales = "free",)
   facet_grid(Group ~ .,scales = "free_y",switch = 'y')
+#ggEnrich
 
-
-tiff("/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Manuscript/Fig23-Enrichment.tiff",
+tiff("/Users/liulihe95/Desktop/Isoform-Expression/AltSplicing-R/Manuscript/Figures/Fig2-Enrichment.tiff",
      width = 16, height = 8, units = 'in', res = 500)
 ggEnrich
 dev.off()

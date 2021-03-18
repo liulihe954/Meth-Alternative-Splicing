@@ -220,6 +220,9 @@ for (chr_tmp in chr_idx_ALL_tmp){
         tmp_row = cbind(Diff_C_sig_with_region_tmp[i,],loc_info_exon[find_index_upstreamlist,5:7])
         
         Diff_C_sig_with_region = bind_rows(Diff_C_sig_with_region,tmp_row)
+        
+        print(tmp_row)
+        
       } else {
         
         tmp_addtion = data.frame(gene_id=NA, transcripts=NA, part_number = NA)

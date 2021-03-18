@@ -94,7 +94,7 @@ for (i in seq_len(1000)){
   allp[i] = ks.test(g1,g2)$p.value
 }
 hist(allp)
-
+length(test_prom_exclude)
 
 
 
@@ -181,6 +181,7 @@ test_prom_exclude = test_prom %>%
   distinct(groupID,.keep_all = T) %>% 
   pull(prom_prop) 
   
+length(test_prom_exclude)
 
 allp = c()
 for (i in seq_len(1000)){
@@ -189,5 +190,5 @@ for (i in seq_len(1000)){
   allp[i] = ks.test(g1,g2)$p.value
 }
 hist(allp)
-
+length(test_prom_exclude)
 
